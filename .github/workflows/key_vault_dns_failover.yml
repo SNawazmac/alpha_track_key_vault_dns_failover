@@ -1,5 +1,31 @@
 name: key vault dns failover
-on: workflow_dispatch
+on:
+  workflow_call:
+    inputs:
+      primary_subscription_Id:
+        required: true
+        type: string
+      private_dns_zone_resource_group_name:
+        required: true
+        type: string
+      key_vault_private_dns_zone_group_name:
+        required: true
+        type: string
+      key_vault_private_dns_zone_name:
+        required: true
+        type: string
+      secondary_private_endpoint_resource_group_name:
+        required: true
+        type: string
+      secondary_private_endpoint_subscription_Id:
+        required: true
+        type: string
+      secondary_private_endpoint_name:
+        required: true
+        type: string
+    secrets:
+      AZURE_CREDENTIALS_DELOITTE_SUB:
+        required: true  
 jobs:  
   job1:
     permissions:
@@ -7,15 +33,16 @@ jobs:
     runs-on: ubuntu-latest       
     steps:
     - name: checkout
-      uses: actions/checkout@v2 
+      uses: actions/checkout@v2
+      with:
+        repository: SNawazmac/key_vault_dns_failover
     - name: Login via Az module
       uses: azure/login@v1
       with:
-        creds: ${{secrets.AZURE_CREDENTIALS_Deloitte}}
+        creds: ${{ secrets.AZURE_CREDENTIALS_DELOITTE_SUB }}
         enable-AzPSSession: true   
     - name: Link PE to Private DNS
       uses: azure/powershell@v1
       with:
         inlineScript: |
-         ./key_vault_dns_failover.ps1 -primary_subscription_Id "${{vars.PRIVATE_DNS_ZONE_SUBSCRIPTION_ID}}" -secondary_subscription_Id "${{vars.SECONDARY_PRIVATE_ENDPOINT_SUBSCRIPTION_ID}}" -Private_DNS_Zone_resource_group_name "${{vars.PRIVATE_DNS_ZONE_RESOURCE_GROUP_NAME}}" -secondary_resource_group_name "${{vars.SECONDARY_PRIVATE_ENDPOINT_RESOURCE_GROUP_NAME}}" -secondary_private_endpoint_name "${{vars.SECONDARY_PRIVATE_ENDPOINT_NAME}}" -zone_name "${{vars.PRIVATE_DNS_ZONE_NAME}}" -Private_DNS_Zone_Group_name "${{vars.PRIVATE_DNS_ZONE_GROUP_NAME}}"
-        azPSVersion: "latest"
+         ./key_vault_dns_failover.ps1 -primary_subscription_Id "${{ inputs.primary_subscription_Id }}" -private_dns_zone_resource_group_name "${{ inputs.private_dns_zone_resource_group_name }}" -key_vault_private_dns_zone_group_name "${{ inputs.key_vault_private_dns_zone_group_name}} -key_vault_private_dns_zone_name "${{ inputs.key_vault_private_dns_zone_name }} -secondary_private_endpoint_resource_group_name "${{ inputs.secondary_private_endpoint_resource_group_name }} -secondary_private_endpoint_subscription_Id "${{inputs.secondary_private_endpoint_subscription_Id}} -secondary_private_endpoint_name "${{inputs.secondary_private_endpoint_name}}  
