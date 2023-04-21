@@ -1,0 +1,46 @@
+name: key vault with dns failover
+on:
+  workflow_call:
+    inputs:
+      private_dns_zone_subscription_Id:
+        required: true
+        type: string
+      private_dns_zone_resource_group_name:
+        required: true
+        type: string
+      key_vault_private_dns_zone_record_name:
+        required: true
+        type: string
+      key_vault_private_dns_zone_name:
+        required: true
+        type: string
+      key_vault_primary_private_endpoint_IP:
+        required: true
+        type: string
+      key_vault_secondary_private_endpoint_IP:
+        required: true
+        type: string
+    secrets:
+      AZURE_CREDENTIALS_DELOITTE_SUB:
+        required: true  
+jobs:  
+  key_vault_dns_failover:
+    permissions:
+      contents: none
+    runs-on: ubuntu-latest       
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+      with:
+        repository: SNawazmac/key_vault_dns_failback
+    - name: Login via Az module
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS_DELOITTE_SUB}}
+        enable-AzPSSession: true   
+    - name: Update recordset of Private DNS Zone
+      uses: azure/powershell@v1
+      with:
+        inlineScript: |
+         ./key_vault_dns_failover.ps1 -private_dns_zone_subscription_Id "${{inputs.private_dns_zone_subscription_Id}}" -private_dns_zone_resource_group_name "${{inputs.private_dns_zone_resource_group_name}}" -key_vault_private_dns_zone_name "${{inputs.key_vault_private_dns_zone_name}}" -key_vault_private_dns_zone_record_name "${{inputs.key_vault_private_dns_zone_record_name}}" -key_vault_primary_private_endpoint_IP "${{inputs.key_vault_primary_private_endpoint_IP}}" -key_vault_secondary_private_endpoint_IP "${{inputs.key_vault_secondary_private_endpoint_IP}}"
+        azPSVersion: "latest"
